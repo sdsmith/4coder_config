@@ -78,6 +78,9 @@ get_bindings(void *data, int32_t size){
     {
         begin_map(context, mapid_file);
         
+        bind(context, '+', MDFR_CTRL, increase_face_size);
+        bind(context, '-', MDFR_CTRL, decrease_face_size);
+        
         bind(context, 'l', MDFR_CTRL, center_view);
         bind(context, 'a', MDFR_CTRL, seek_beginning_of_line);
         bind(context, 'e', MDFR_CTRL, seek_end_of_textual_line);
