@@ -1,0 +1,15 @@
+/4coder*
+/4ed*
+
+*.dll
+*.pdb
+
+fonts
+languages
+themes
+
+changes.txt
+buildsuper.bat
+LICENSE.txt
+README.txt
+windows_scripts
