@@ -7,6 +7,7 @@
 fonts
 languages
 themes
+/.vs
 
 changes.txt
 buildsuper.bat

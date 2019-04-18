@@ -13,7 +13,7 @@ Ref: https://4coder.handmade.network/wiki/6818-customization_layer_-_getting_sta
 
 namespace
 {
-    static constexpr char const s_git_buffer[] = "*git*";
+    static char s_git_buffer[] = "*git*";
 }
 
 static void
@@ -38,24 +38,25 @@ exec_system_command_from_hot_directory(Application_Links *app,
 CUSTOM_COMMAND_SIG(git_status)
 CUSTOM_DOC("git status") {
     String out_buf = make_string_slowly(s_git_buffer);
-    
-    exec_system_command_from_hot_directory(app, s_git_buffer,
-                                           "git status");
+    String cmd = make_string_slowly("git status");
+    exec_system_command_from_hot_directory(app, out_buf, cmd);
 }
 
 CUSTOM_COMMAND_SIG(git_add_current_file)
 CUSTOM_DOC("git add <current file>") {
     String out_buf = make_string_slowly(s_git_buffer);
-    string cmd = "git add "; // TODO(sdryds): @lazy
+    
+    constexpr int32_t cmd_buf_size = 256;
+    char cmd_buf[cmd_buf_size];
+    String cmd = make_string_cap(cmd_buf, 0, cmd_buf_size);
+    if (!append_sc(&cmd, "git add ")) { return; } // TODO(sdryds): error message
     
     uint32_t access = AccessAll;
     View_Summary view = get_active_view(app, access);
     Buffer_Summary buffer = get_buffer(app, view.buffer_id, access);
+    if (!append_sc(&cmd, buffer.file_name)) { return; } // TODO(sdryds): error message
     
-    cmd += buffer.buffer_name;
-    String cmd_str = make_string_slowly(cmd.c_str());
-    
-    exec_system_command_from_hot_directory(app, s_git_buffer, cmd_str);
+    exec_system_command_from_hot_directory(app, out_buf, cmd);
 }
 
 //CUSTOM_COMMAND_SIG(git_add)
@@ -66,17 +67,24 @@ CUSTOM_DOC("git add <current file>") {
 CUSTOM_COMMAND_SIG(git_commit)
 CUSTOM_DOC("git commit") {
     String out_buf = make_string_slowly(s_git_buffer);
-    string cmd = "git commit -m "; // TODO(sdryds): @lazy
     
+    char cmd_prefix[] = "git commit -m ";
+    constexpr int32_t commit_msg_max_length = 2048;
+    constexpr int32_t cmd_buf_size = commit_msg_max_length + sizeof(cmd_prefix);
+    char cmd_buf[cmd_buf_size];
+    String cmd = make_string_cap(cmd_buf, 0, cmd_buf_size);
+    if (!append_sc(&cmd, cmd_prefix)) { return; } // TODO(sdryds): error message
+    
+    // NOTE(sdryds): hacky
+    char* buf_commit_msg_start = cmd_prefix + sizeof(cmd_prefix) - 1; // -1 for null term
+    String query_buf = make_string_cap(buf_commit_msg_start, 0, commit_msg_max_length + 1); // +1 null term
     Query_Bar bar_msg = {};
     bar_msg.prompt = make_lit_string("Commit message: ");
-    bar_msg.string = make_fixed_width_string(commit_msg_space);
-    if (!query_user_string(app, &bar_msg)) { return; }
+    bar_msg.string = query_buf;
+    if (!query_user_string(app, &bar_msg)) { return; } // TODO(sdryds): error message
+    // No need to append, it's inplace
     
-    cmd += commit_msg_space;
-    String cmd_str = make_string_slowly(cmd.c_str());
-    
-    exec_system_command_from_hot_directory(app, s_git_buffer, cmd_str);
+    exec_system_command_from_hot_directory(app, out_buf, cmd);
 }
 
 // NOTE(allen|a4.0.22): This no longer serves as very good example code.
@@ -122,6 +130,8 @@ get_bindings(void *data, int32_t size){
     // - git integration
     // - rememeber the last seen file and make it first suggestion when switching buffers
     // - list all bound keys and their commands
+    // - kill from current position to EOL
+    // - fill column (text wrap for comments)
     
     // Custom key bindings to override defaults
     //
@@ -130,6 +140,7 @@ get_bindings(void *data, int32_t size){
         
         bind(context, '+', MDFR_CTRL, increase_face_size);
         bind(context, '-', MDFR_CTRL, decrease_face_size);
+        bind(context, 'r', MDFR_ALT, reopen);
         
         bind(context, 'l', MDFR_CTRL, center_view);
         bind(context, 'a', MDFR_CTRL, seek_beginning_of_line);
