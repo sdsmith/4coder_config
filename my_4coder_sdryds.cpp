@@ -54,7 +54,7 @@ CUSTOM_DOC("git add <current file>") {
     uint32_t access = AccessAll;
     View_Summary view = get_active_view(app, access);
     Buffer_Summary buffer = get_buffer(app, view.buffer_id, access);
-    if (!append_sc(&cmd, buffer.file_name)) { return; } // TODO(sdryds): error message
+    if (buffer.buffer_name && !append_sc(&cmd, buffer.buffer_name)) { return; } // TODO(sdryds): error message
     
     exec_system_command_from_hot_directory(app, out_buf, cmd);
 }
@@ -76,13 +76,14 @@ CUSTOM_DOC("git commit") {
     if (!append_sc(&cmd, cmd_prefix)) { return; } // TODO(sdryds): error message
     
     // NOTE(sdryds): hacky
-    char* buf_commit_msg_start = cmd_prefix + sizeof(cmd_prefix) - 1; // -1 for null term
+    char* buf_commit_msg_start = cmd_buf + sizeof(cmd_prefix) - 1; // -1 for null term
     String query_buf = make_string_cap(buf_commit_msg_start, 0, commit_msg_max_length + 1); // +1 null term
     Query_Bar bar_msg = {};
     bar_msg.prompt = make_lit_string("Commit message: ");
     bar_msg.string = query_buf;
     if (!query_user_string(app, &bar_msg)) { return; } // TODO(sdryds): error message
-    // No need to append, it's inplace
+    // No need to append, it's inplace. Do need length update
+    cmd.size += bar_msg.string.size;
     
     exec_system_command_from_hot_directory(app, out_buf, cmd);
 }
