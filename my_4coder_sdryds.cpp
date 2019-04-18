@@ -96,6 +96,26 @@ CUSTOM_DOC("git push") {
     exec_system_command_from_hot_directory(app, out_buf, cmd);
 }
 
+/*
+CUSTOM_COMMAND_SIG(list_bindings)
+CUSTOM_DOC("Lists all the key bindings") {
+    // TODO(sdryds): Bind_Helper, being_map, bind are going to help get info for this.
+    
+    // Binding_Unit { type, binding {command_id, code, modifiers}}
+    
+Bind_Helper helper;
+Binding_Unit *p = nullptr;
+while (helper->error == 0 && 
+       helper->cursor != helper->end)
+{
+    p = helper->cursor++;
+    
+    
+}
+}
+*/
+
+
 
 // NOTE(allen|a4.0.22): This no longer serves as very good example code.
 // Good example code will be coming soon, but in the mean time you can go
@@ -129,6 +149,7 @@ get_bindings(void *data, int32_t size){
     // - line delete should be yank (C-k, not C-D)
     // - highlight background between mark and cursor
     //   - create_marker_visual
+    //   - exmaple in isearch impl
     // - save registers
     // - line move by p/n, f/b
     //   - might have to use other keys, they are already bound to the standard stuff. Mess with it???
