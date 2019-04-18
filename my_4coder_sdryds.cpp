@@ -68,7 +68,7 @@ CUSTOM_COMMAND_SIG(git_commit)
 CUSTOM_DOC("git commit") {
     String out_buf = make_string_slowly(s_git_buffer);
     
-    char cmd_prefix[] = "git commit -m ";
+    char cmd_prefix[] = "git commit -m \"";
     constexpr int32_t commit_msg_max_length = 2048;
     constexpr int32_t cmd_buf_size = commit_msg_max_length + sizeof(cmd_prefix);
     char cmd_buf[cmd_buf_size];
@@ -84,9 +84,18 @@ CUSTOM_DOC("git commit") {
     if (!query_user_string(app, &bar_msg)) { return; } // TODO(sdryds): error message
     // No need to append, it's inplace. Do need length update
     cmd.size += bar_msg.string.size;
+    if (!append_sc(&cmd, "\"")) { return; } // TODO(sdryds): error message
     
     exec_system_command_from_hot_directory(app, out_buf, cmd);
 }
+
+CUSTOM_COMMAND_SIG(git_push)
+CUSTOM_DOC("git push") {
+    String out_buf = make_string_slowly(s_git_buffer);
+    String cmd = make_string_slowly("git push");
+    exec_system_command_from_hot_directory(app, out_buf, cmd);
+}
+
 
 // NOTE(allen|a4.0.22): This no longer serves as very good example code.
 // Good example code will be coming soon, but in the mean time you can go
